@@ -1,0 +1,72 @@
+# Alembic database migration config
+# Initialize with: alembic init alembic
+# Then replace alembic/env.py with this content:
+
+"""
+Alembic env.py — async migration runner for BAHERA.
+
+Setup:
+  1. pip install alembic
+  2. alembic init alembic
+  3. Replace alembic/env.py with this file
+  4. Set sqlalchemy.url in alembic.ini OR let this script read from .env
+  5. alembic revision --autogenerate -m "initial schema"
+  6. alembic upgrade head
+"""
+
+import asyncio
+from logging.config import fileConfig
+
+from alembic import context
+from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import async_engine_from_config
+
+# Import your models so Alembic can detect them
+from app.database import Base
+from app.models.models import *  # noqa: F401,F403
+from app.config import get_settings
+
+settings = get_settings()
+config = context.config
+
+# Override sqlalchemy.url from environment
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("+asyncpg", ""))
+
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+target_metadata = Base.metadata
+
+
+def run_migrations_offline() -> None:
+    url = config.get_main_option("sqlalchemy.url")
+    context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def do_run_migrations(connection):
+    context.configure(connection=connection, target_metadata=target_metadata)
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+async def run_async_migrations() -> None:
+    connectable = async_engine_from_config(
+        config.get_section(config.config_ini_section, {}),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+    async with connectable.connect() as connection:
+        await connection.run_sync(do_run_migrations)
+    await connectable.dispose()
+
+
+def run_migrations_online() -> None:
+    asyncio.run(run_async_migrations())
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()
