@@ -1,0 +1,35 @@
+# BAHERA API Dependencies
+# Install: pip install -r requirements.txt
+
+# ── Framework ────────────────────────────────
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic[email]==2.10.4
+pydantic-settings==2.7.1
+
+# ── Database ─────────────────────────────────
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+pgvector==0.3.6
+alembic==1.14.0
+
+# ── AI ───────────────────────────────────────
+openai==1.58.1
+tiktoken==0.8.0
+
+# ── Auth ─────────────────────────────────────
+PyJWT==2.10.1
+
+# ── HTTP Client ──────────────────────────────
+httpx==0.28.1
+
+# ── PDF Processing (for knowledge base) ─────
+pypdf==5.1.0
+pdfplumber==0.11.4
+
+# ── Scheduling ───────────────────────────────
+apscheduler==3.10.4
+
+# ── Utilities ────────────────────────────────
+python-multipart==0.0.19
+python-dotenv==1.0.1
