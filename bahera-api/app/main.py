@@ -14,6 +14,24 @@ from app.routers import agents, analytics, auth, campaigns, chatbot, leads, prop
 
 settings = get_settings()
 
+from fastapi.middleware.cors import CORSMiddleware
+ 
+app = FastAPI()
+ 
+app.add_middleware(
+
+    CORSMiddleware,
+
+    allow_origins=["https://baheera-qpbooya1t-baheera-ops-projects.vercel.app"],  # Your Vercel URL
+
+    allow_credentials=True,
+
+    allow_methods=["*"],
+
+    allow_headers=["*"],
+
+)
+ 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
