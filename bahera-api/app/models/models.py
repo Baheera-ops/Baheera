@@ -97,6 +97,12 @@ class DeliveryStatus(str, enum.Enum):
     DELIVERED = "delivered"
     READ = "read"
     FAILED = "failed"
+    
+class DocumentStatus(str, enum.Enum):     
+    pending = "pending"
+    processing = "processing"
+    processed = "processed"
+    failed = "failed"
 
 
 class FollowUpStatus(str, enum.Enum):
