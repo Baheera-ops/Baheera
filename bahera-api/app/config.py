@@ -21,7 +21,8 @@ class Settings(BaseSettings):
     META_VERIFY_TOKEN: str = "bahera_verify_2026"
     WHATSAPP_PHONE_ID: str = ""
     WHATSAPP_ACCESS_TOKEN: str = ""
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "https://baheera.vercel.app", "https://baheera.onrender.com"]
+    
     API_V1_PREFIX: str = "/api/v1"
 
     @field_validator("CORS_ORIGINS", mode="before")
