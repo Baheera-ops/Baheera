@@ -1,68 +1,57 @@
-"""
-BAHERA API — Main application entry point.
-Mounts all routers, configures CORS, lifespan events.
-Run with: uvicorn app.main:app --reload
-"""
-
+import asyncio
 from contextlib import asynccontextmanager
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import agents, analytics, auth, campaigns, chatbot, leads, properties, webhooks
+from app.modules.agents.router import router as agents_router
+from app.modules.campaigns.router import router as campaigns_router
+from app.modules.leads.router import router as leads_router
+from app.modules.properties.router import router as properties_router
+from app.modules.settings.router import router as settings_router
+from app.modules.webhooks.meta import router as meta_webhook_router
+from app.modules.webhooks.widget import router as widget_webhook_router
+from app.scheduler.jobs import process_follow_ups_job
 
 settings = get_settings()
+scheduler = AsyncIOScheduler()
+
+
+def _schedule_followups() -> None:
+    asyncio.create_task(process_follow_ups_job())
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup and shutdown events."""
-    # Startup: verify DB connection, warm caches
-    print(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
+    scheduler.add_job(_schedule_followups, "interval", minutes=5, id="bahera_followups", replace_existing=True)
+    scheduler.start()
     yield
-    # Shutdown: cleanup
-    print("Shutting down...")
+    scheduler.shutdown(wait=False)
 
 
-app = FastAPI(
-    title=settings.APP_NAME,
-    version=settings.APP_VERSION,
-    description="AI-powered real estate lead generation and qualification platform",
-    lifespan=lifespan,
-    docs_url="/docs" if settings.DEBUG else None,
-    redoc_url="/redoc" if settings.DEBUG else None,
-)
+app = FastAPI(title="Bahera API", version="1.0.0", lifespan=lifespan)
 
-# ── CORS ─────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=r"https://baheera-.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ── Route mounting ───────────────────────────────────────────────────
-app.include_router(auth.router,       prefix="/api/v1")
-app.include_router(leads.router,      prefix="/api/v1")
-app.include_router(chatbot.router,    prefix="/api/v1")
-app.include_router(campaigns.router,  prefix="/api/v1")
-app.include_router(agents.router,     prefix="/api/v1")
-app.include_router(analytics.router,  prefix="/api/v1")
-app.include_router(properties.router, prefix="/api/v1")
-app.include_router(webhooks.router)  # Public — no /api/v1 prefix
+v1 = settings.API_V1_PREFIX
+app.include_router(leads_router, prefix=v1)
+app.include_router(agents_router, prefix=v1)
+app.include_router(campaigns_router, prefix=v1)
+app.include_router(properties_router, prefix=v1)
+app.include_router(settings_router, prefix=v1)
+app.include_router(meta_webhook_router)
+app.include_router(widget_webhook_router)
 
 
 @app.get("/health")
-async def health_check():
-    return {"status": "healthy", "version": settings.APP_VERSION}
-
-
-@app.get("/")
-async def root():
-    return {
-        "name": settings.APP_NAME,
-        "version": settings.APP_VERSION,
-        "docs": "/docs" if settings.DEBUG else "Disabled in production",
-    }
+async def health():
+    return {"status": "ok"}
