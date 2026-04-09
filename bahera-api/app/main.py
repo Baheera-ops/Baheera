@@ -15,7 +15,6 @@ from app.routers import agents, analytics, auth, campaigns, chatbot, leads, prop
 settings = get_settings()
 
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and shutdown events."""
