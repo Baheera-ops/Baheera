@@ -10,7 +10,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     ENVIRONMENT: str = "development"
+    DEBUG: bool = False
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 10
     SUPABASE_URL: str = ""
     SUPABASE_SERVICE_KEY: str = ""
     SUPABASE_JWT_SECRET: str = ""
@@ -21,8 +24,12 @@ class Settings(BaseSettings):
     META_VERIFY_TOKEN: str = "bahera_verify_2026"
     WHATSAPP_PHONE_ID: str = ""
     WHATSAPP_ACCESS_TOKEN: str = ""
-    CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000", "https://baheera.vercel.app", "https://baheera.onrender.com"]
-    
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://baheera.vercel.app",
+        "https://baheera.onrender.com",
+    ]
     API_V1_PREFIX: str = "/api/v1"
 
     @field_validator("CORS_ORIGINS", mode="before")
